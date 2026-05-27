@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análise de Ponto Embutida</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #d9e2ec;
+      --ink: #102a43;
+      --muted: #627d98;
+      --accent: #0f766e;
+      --accent-2: #1d4ed8;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --ok: #15803d;
+      --radius: 14px;
+      --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      --head: "Trebuchet MS", "Segoe UI", sans-serif;
+      --body: "Verdana", "Tahoma", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--body);
+      background:
+        radial-gradient(circle at 0 0, #e4f4ef 0, transparent 35%),
+        radial-gradient(circle at 100% 0, #e8efff 0, transparent 42%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .hero {
+      border-radius: var(--radius);
+      padding: 22px;
+      color: #fff;
+      background: linear-gradient(135deg, #0f766e, #1d4ed8);
+      box-shadow: var(--shadow);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font: 700 1.7rem/1.2 var(--head);
+      letter-spacing: .03em;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      opacity: .95;
+    }
+
+    .stamp {
+      margin-top: 8px;
+      font-size: .85rem;
+      opacity: .88;
+    }
+
+    .grid {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      animation: in .35s ease both;
+    }
+
+    @keyframes in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: .84rem;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font: 700 1.45rem/1.1 var(--head);
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 6px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    .ok { background: #e9f8ef; color: var(--ok); }
+    .warn { background: #fff4df; color: var(--warn); }
+    .bad { background: #ffe9e9; color: var(--danger); }
+
+    .section {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section h2 {
+      margin: 0;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+      font: 700 1.05rem/1.2 var(--head);
+    }
+
+    .body { padding: 14px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334e68;
+      font-family: var(--head);
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 12px;
+    }
+
+    .chart-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fcfdff;
+    }
+
+    .chart-title {
+      margin: 0 0 8px;
+      font: 700 .95rem/1.2 var(--head);
+      color: #334e68;
+    }
+
+    canvas {
+      width: 100%;
+      height: 260px;
+      display: block;
+      background: #fff;
+      border: 1px solid #e6edf5;
+      border-radius: 8px;
+    }
+
+    .small { color: var(--muted); font-size: .8rem; }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 12px; }
+      .hero h1 { font-size: 1.35rem; }
+      th, td { font-size: .8rem; }
+      canvas { height: 230px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Painel de Ponto Consolidado</h1>
+      <div class="stamp" id="stamp"></div>
+    </section>
+
+    <section class="grid" id="kpis"></section>
+
+    <section class="section">
+      <h2>Gráficos</h2>
+      <div class="body charts">
+        <article class="chart-card">
+          <h3 class="chart-title">Pontualidade Média por Setor (%)</h3>
+          <canvas id="chartPunctuality" width="520" height="260"></canvas>
+        </article>
+        <article class="chart-card">
+          <h3 class="chart-title">Horas Extras por Setor (hh:mm)</h3>
+          <canvas id="chartExtra" width="520" height="260"></canvas>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Resultado por Setor</h2>
+      <div class="body">
+        <table>
+          <thead>
+            <tr>
+              <th>Setor</th>
+              <th>Colaboradores</th>
+              <th>Pontualidade Média</th>
+              <th>Atrasos (dias)</th>
+              <th>Tempo de Atraso</th>
+              <th>Horas Extras</th>
+            </tr>
+          </thead>
+          <tbody id="tableSector"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Detalhe por Colaborador</h2>
+      <div class="body">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Setor</th>
+              <th>Pontualidade</th>
+              <th>Atrasos</th>
+              <th>Horas Extras</th>
+            </tr>
+          </thead>
+          <tbody id="tableEmployee"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const EMBEDDED_EMPLOYEES = [{"fileName":"CARTÃO PONTO_1.html","name":"ALEXANDRE MENESES SANTOS","sector":"APOIO","metrics":{"punctuality":99,"delayDays":4,"totalDelayMin":12,"totalExtraMin":602,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_3.html","name":"ANA CLAUDIA DE JESUS SILVA","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":99,"delayDays":2,"totalDelayMin":13,"totalExtraMin":353,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_5.html","name":"ANNY KAROLAYNE SANTOS DE JESUS","sector":"APOIO","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_7.html","name":"ANTONIA ROSA DE SANTANA","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":790,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_9.html","name":"ARLAN DOS SANTOS ARNOR","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":686,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_11.html","name":"BARBARA DE ALMEIDA PEREIRA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":97,"delayDays":4,"totalDelayMin":38,"totalExtraMin":630,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_13.html","name":"CLEVERLAN LIMA MESQUITA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":1,"totalExtraMin":275,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_15.html","name":"DAYSE DE OLIVEIRA ANDRADE","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":3,"totalExtraMin":112,"frequency":50,"workedDays":15,"totalDays":30,"comparedDays":15}},{"fileName":"CARTÃO PONTO_17.html","name":"DILENE BRAZ DA SILVA","sector":"DEPARTAMENTO SIMPLES NACIONAL","metrics":{"punctuality":96,"delayDays":0,"totalDelayMin":51,"totalExtraMin":638,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_19.html","name":"EDUARDO OLIVEIRA SANTANA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":94,"delayDays":4,"totalDelayMin":45,"totalExtraMin":180,"frequency":43,"workedDays":13,"totalDays":30,"comparedDays":12}},{"fileName":"CARTÃO PONTO_21.html","name":"ELIDAYSE NICOLAU DOS SANTOS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":1844,"frequency":60,"workedDays":18,"totalDays":30,"comparedDays":17}},{"fileName":"CARTÃO PONTO_23.html","name":"ELIZABETE TAVARES DE ALMEIDA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":850,"frequency":60,"workedDays":18,"totalDays":30,"comparedDays":18}},{"fileName":"CARTÃO PONTO_25.html","name":"ELLEN JOSEFA PASSOS DOS SANTOS","sector":"APOIO","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_27.html","name":"ERICA SANTOS DE LIMA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":100,"delayDays":3,"totalDelayMin":5,"totalExtraMin":273,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_29.html","name":"FABRICIO OLIVEIRA CAETANO","sector":"APOIO","metrics":{"punctuality":76,"delayDays":15,"totalDelayMin":261,"totalExtraMin":1600,"frequency":60,"workedDays":18,"totalDays":30,"comparedDays":18}},{"fileName":"CARTÃO PONTO_31.html","name":"GABRIEL CARVALHO SANTOS","sector":"DEPARTAMENTO CADASTRO","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_33.html","name":"IAN FRANCISCO OLIVEIRA CUNHA","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":98,"delayDays":8,"totalDelayMin":27,"totalExtraMin":282,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_35.html","name":"IANE HELOISA MARTIRES BISPO","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":96,"delayDays":4,"totalDelayMin":49,"totalExtraMin":932,"frequency":73,"workedDays":22,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_37.html","name":"IGOR DA CUNHA LEITE","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_39.html","name":"ISABEL OLIVEIRA DE ALMEIDA","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":85,"delayDays":5,"totalDelayMin":182,"totalExtraMin":267,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_41.html","name":"ISABELLE SANTOS CRUZ","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_43.html","name":"JAYANE MENEZES GONZAGA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":95,"delayDays":0,"totalDelayMin":49,"totalExtraMin":1005,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":18}},{"fileName":"CARTÃO PONTO_45.html","name":"JESSICA MENESES ANDRADE","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":5,"totalExtraMin":752,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_47.html","name":"JESSICA SANTOS","sector":"DEPARTAMENTO SIMPLES NACIONAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":278,"frequency":40,"workedDays":12,"totalDays":30,"comparedDays":12}},{"fileName":"CARTÃO PONTO_49.html","name":"JHENNIFER JHEYNE BRITO DE JESUS","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":92,"delayDays":2,"totalDelayMin":43,"totalExtraMin":54,"frequency":30,"workedDays":9,"totalDays":30,"comparedDays":9}},{"fileName":"CARTÃO PONTO_51.html","name":"JOAO VITOR DA CUNHA LIMA","sector":"APOIO","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_53.html","name":"JOSEANE ALMEIDA DA SILVA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":89,"delayDays":5,"totalDelayMin":131,"totalExtraMin":590,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_55.html","name":"JOSINETE ALMEIDA PEREIRA","sector":"APOIO","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_57.html","name":"JUCIMARA DOS PASSOS","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":99,"delayDays":3,"totalDelayMin":14,"totalExtraMin":521,"frequency":60,"workedDays":18,"totalDays":30,"comparedDays":17}},{"fileName":"CARTÃO PONTO_59.html","name":"JULIANA RESENDE DE MATOS","sector":"APOIO","metrics":{"punctuality":99,"delayDays":3,"totalDelayMin":9,"totalExtraMin":455,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_61.html","name":"JULIANE DE JESUS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":97,"delayDays":3,"totalDelayMin":16,"totalExtraMin":455,"frequency":30,"workedDays":9,"totalDays":30,"comparedDays":9}},{"fileName":"CARTÃO PONTO_63.html","name":"KAMILLA VIEIRA MENDES","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":89,"delayDays":13,"totalDelayMin":126,"totalExtraMin":447,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_65.html","name":"KAROLAYNE SANTOS GAMA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":98,"delayDays":3,"totalDelayMin":18,"totalExtraMin":459,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_67.html","name":"LETICIA DE ALMEIDA COSTA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":814,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_69.html","name":"LIVIA SANTANA DOS SANTOS","sector":"DEPARTAMENTO CADASTRO","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":352,"frequency":27,"workedDays":8,"totalDays":30,"comparedDays":8}},{"fileName":"CARTÃO PONTO_71.html","name":"LUCAS VINICIUS SOUZA REZENDE","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":424,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_73.html","name":"LUCIANA DA LAPA SANTOS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":1690,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_75.html","name":"MARCELLE NOEMIA PETROLA","sector":"DEPARTAMENTO CADASTRO","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":1306,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_77.html","name":"MARIA EDUARDA DOS SANTOS","sector":"DEPARTAMENTO SIMPLES NACIONAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":478,"frequency":57,"workedDays":17,"totalDays":30,"comparedDays":17}},{"fileName":"CARTÃO PONTO_79.html","name":"MARIA EDUARDA FERREIRA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":1010,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_81.html","name":"MARYANNE OLIVEIRA MACEDO MARTINS","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":362,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_83.html","name":"MATEUS DOS SANTOS COSTA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":96,"delayDays":10,"totalDelayMin":51,"totalExtraMin":582,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_85.html","name":"MICHELLE SANTOS OLIVEIRA","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":204,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_87.html","name":"MIGUEL GOIS DE OLIVEIRA NETO","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":877,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_89.html","name":"MONICA LIMA SANTANA LEITE","sector":"GERAL","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_91.html","name":"MONISE NERI DOS SANTOS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":1031,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_93.html","name":"MYLENA SANTOS TELES","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":95,"delayDays":10,"totalDelayMin":56,"totalExtraMin":504,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_95.html","name":"MYRZIA HELLEN COSTA SANTOS","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":99,"delayDays":2,"totalDelayMin":6,"totalExtraMin":361,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_97.html","name":"NAIELLY APARECIDA CARREGOSA CIRQUEI","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_99.html","name":"OTAVIO FELIPE DOS SANTOS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":97,"delayDays":7,"totalDelayMin":34,"totalExtraMin":631,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_101.html","name":"RAQUEL CHRISTINNE DOS SANTOS","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":0,"delayDays":0,"totalDelayMin":0,"totalExtraMin":0,"frequency":0,"workedDays":0,"totalDays":30,"comparedDays":0}},{"fileName":"CARTÃO PONTO_103.html","name":"RENATA DE JESUS SANTOS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":93,"delayDays":2,"totalDelayMin":85,"totalExtraMin":350,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_105.html","name":"RENATA FEITOSA DE MENESES SANTOS","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":99,"delayDays":6,"totalDelayMin":14,"totalExtraMin":602,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_107.html","name":"TAMIRES MENDONCA LIMA","sector":"DEPARTAMENTO CONTABIL","metrics":{"punctuality":98,"delayDays":8,"totalDelayMin":28,"totalExtraMin":465,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_109.html","name":"TAYNARA GOMES MENEZES","sector":"DEPARTAMENTO CADASTRO","metrics":{"punctuality":89,"delayDays":9,"totalDelayMin":137,"totalExtraMin":1591,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_111.html","name":"TAYSLAN SANTOS NUNES","sector":"DEPARTAMENTO PESSOAL","metrics":{"punctuality":96,"delayDays":6,"totalDelayMin":48,"totalExtraMin":570,"frequency":63,"workedDays":19,"totalDays":30,"comparedDays":19}},{"fileName":"CARTÃO PONTO_113.html","name":"WENDIA LUANA RESENDE DE SOUZA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":100,"delayDays":0,"totalDelayMin":0,"totalExtraMin":2260,"frequency":67,"workedDays":20,"totalDays":30,"comparedDays":20}},{"fileName":"CARTÃO PONTO_115.html","name":"WILLIAN DOS SANTOS LIMA","sector":"DEPARTAMENTO FISCAL","metrics":{"punctuality":92,"delayDays":8,"totalDelayMin":87,"totalExtraMin":497,"frequency":60,"workedDays":18,"totalDays":30,"comparedDays":18}}];
+
+    const kpisEl = document.getElementById("kpis");
+    const tableSectorEl = document.getElementById("tableSector");
+    const tableEmployeeEl = document.getElementById("tableEmployee");
+    const stampEl = document.getElementById("stamp");
+
+    function toHHMM(totalMin) {
+      const sign = totalMin < 0 ? "-" : "";
+      const abs = Math.abs(totalMin);
+      const hh = String(Math.floor(abs / 60)).padStart(2, "0");
+      const mm = String(abs % 60).padStart(2, "0");
+      return `${sign}${hh}:${mm}`;
+    }
+
+    function qualityTag(percent) {
+      if (percent >= 90) return '<span class="badge ok">Excelente</span>';
+      if (percent >= 75) return '<span class="badge warn">Atenção</span>';
+      return '<span class="badge bad">Crítico</span>';
+    }
+
+    function chartSectorLabel(sector) {
+      return String(sector || "")
+        .replace(/^DEPARTAMENTO\s+/i, "")
+        .trim();
+    }
+
+    function aggregateBySector(rows) {
+      const map = new Map();
+      for (const e of rows) {
+        const key = e.sector || "(sem setor)";
+        if (!map.has(key)) {
+          map.set(key, {
+            sector: key,
+            n: 0,
+            punctuality: 0,
+            delayDays: 0,
+            delayMin: 0,
+            extraMin: 0,
+            frequency: 0
+          });
+        }
+        const s = map.get(key);
+        s.n += 1;
+        s.punctuality += e.metrics.punctuality;
+        s.delayDays += e.metrics.delayDays;
+        s.delayMin += e.metrics.totalDelayMin;
+        s.extraMin += e.metrics.totalExtraMin;
+        s.frequency += e.metrics.frequency;
+      }
+      return [...map.values()].map(s => ({
+        ...s,
+        punctualityAvg: s.n ? Math.round(s.punctuality / s.n) : 0,
+        frequencyAvg: s.n ? Math.round(s.frequency / s.n) : 0
+      })).sort((a, b) => a.sector.localeCompare(b.sector, "pt-BR"));
+    }
+
+    function drawBarChart(canvasId, labels, values, opts = {}) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext("2d");
+
+      const targetHeight = Math.max(260, labels.length * 34 + 24);
+      canvas.height = targetHeight;
+      canvas.style.height = `${targetHeight}px`;
+
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const labelW = 120;
+      const valueW = 62;
+      const left = labelW + 10;
+      const right = valueW + 8;
+      const top = 12;
+      const bottom = 20;
+      const plotW = w - left - right;
+      const rowH = (h - top - bottom) / Math.max(labels.length, 1);
+      const barH = Math.max(10, rowH * 0.54);
+      const max = Math.max(1, ...values);
+
+      ctx.font = "11px Verdana";
+      ctx.fillStyle = "#627d98";
+
+      labels.forEach((label, i) => {
+        const y = top + i * rowH + (rowH - barH) / 2;
+        const val = values[i] || 0;
+        const barW = (val / max) * plotW;
+        const baseline = y + barH - 1;
+
+        ctx.fillStyle = "#f1f5f9";
+        ctx.fillRect(left, y, plotW, barH);
+
+        const grad = ctx.createLinearGradient(left, y, left + barW, y + barH);
+        grad.addColorStop(0, opts.colorA || "#0f766e");
+        grad.addColorStop(1, opts.colorB || "#1d4ed8");
+        ctx.fillStyle = grad;
+        ctx.fillRect(left, y, barW, barH);
+
+        ctx.fillStyle = "#334e68";
+        const short = label.length > 17 ? label.slice(0, 15) + ".." : label;
+        ctx.fillText(short, 8, baseline);
+
+        const valueLabel = opts.formatter ? opts.formatter(val) : String(val);
+        ctx.fillStyle = "#102a43";
+        ctx.textAlign = "right";
+        ctx.fillText(valueLabel, w - 8, baseline);
+        ctx.textAlign = "left";
+      });
+    }
+
+    function render() {
+      const rows = EMBEDDED_EMPLOYEES;
+      const sectors = aggregateBySector(rows);
+
+      const totals = rows.reduce((acc, e) => {
+        acc.n += 1;
+        acc.p += e.metrics.punctuality;
+        acc.delayDays += e.metrics.delayDays;
+        acc.delayMin += e.metrics.totalDelayMin;
+        acc.extra += e.metrics.totalExtraMin;
+        return acc;
+      }, { n: 0, p: 0, delayDays: 0, delayMin: 0, extra: 0 });
+
+      const punctualityAvg = totals.n ? Math.round(totals.p / totals.n) : 0;
+
+      kpisEl.innerHTML = `
+        <article class="card"><div class="label">Colaboradores</div><div class="value">${totals.n}</div></article>
+        <article class="card"><div class="label">Pontualidade Média</div><div class="value">${punctualityAvg}%</div>${qualityTag(punctualityAvg)}</article>
+        <article class="card"><div class="label">Horas Extras Totais</div><div class="value">${toHHMM(totals.extra)}</div></article>
+      `;
+
+      tableSectorEl.innerHTML = sectors.map(s => `
+        <tr>
+          <td>${s.sector}</td>
+          <td>${s.n}</td>
+          <td>${s.punctualityAvg}%</td>
+          <td>${s.delayDays}</td>
+          <td>${toHHMM(s.delayMin)}</td>
+          <td>${toHHMM(s.extraMin)}</td>
+        </tr>
+      `).join("");
+
+      tableEmployeeEl.innerHTML = [...rows]
+        .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+        .map(e => `
+          <tr>
+            <td>${e.name}</td>
+            <td>${e.sector}</td>
+            <td>${e.metrics.punctuality}%</td>
+            <td>${e.metrics.delayDays} (${toHHMM(e.metrics.totalDelayMin)})</td>
+            <td>${toHHMM(e.metrics.totalExtraMin)}</td>
+          </tr>
+        `).join("");
+
+      const labels = sectors.map(s => chartSectorLabel(s.sector));
+      drawBarChart("chartPunctuality", labels, sectors.map(s => s.punctualityAvg), {
+        colorA: "#0f766e",
+        colorB: "#059669",
+        formatter: v => `${v}%`
+      });
+      drawBarChart("chartExtra", labels, sectors.map(s => s.extraMin), {
+        colorA: "#1d4ed8",
+        colorB: "#2563eb",
+        formatter: v => toHHMM(v)
+      });
+
+      stampEl.textContent = "";
+    }
+
+    render();
+  </script>
+</body>
+</html>
+
+
+
+
